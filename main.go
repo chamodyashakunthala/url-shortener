@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -21,11 +22,19 @@ var rdb *redis.Client
 var ctx = context.Background()
 
 func initRedis() {
-	rdb = redis.NewClient(&redis.Options{
-		Addr: "host.docker.internal:6379",
-	})
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		log.Fatal("REDIS_URL environment variable not set")
+	}
 
-	err := rdb.Ping(ctx).Err()
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Fatal("Failed to parse Redis URL:", err)
+	}
+
+	rdb = redis.NewClient(opt)
+
+	err = rdb.Ping(ctx).Err()
 	if err != nil {
 		log.Fatal("Failed to connect to Redis:", err)
 	}
@@ -34,7 +43,11 @@ func initRedis() {
 }
 
 func initDB() {
-	connStr := "host=host.docker.internal port=5432 user=postgres password=shakunthala123 dbname=urlshortener sslmode=disable"
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		log.Fatal("DATABASE_URL environment variable not set")
+	}
+
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
