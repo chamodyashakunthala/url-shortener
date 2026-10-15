@@ -47,3 +47,17 @@ A backend URL shortener built from scratch in Go, demonstrating REST API design,
 4. Run:
 ```bash
 go run main.go
+
+## Cloud Deployment
+
+This project has been successfully deployed to a cloud environment, validating the full stack beyond local development:
+
+- **Database:** [Supabase](https://supabase.com) (managed PostgreSQL)
+- **Cache:** [Upstash](https://upstash.com) (managed Redis)
+- **Compute:** [Back4App Containers](https://www.back4app.com) (Docker-based hosting)
+- **Configuration:** all database/cache connections are read from environment variables (`DATABASE_URL`, `REDIS_URL`), not hardcoded — standard practice for deployable services
+
+### A real deployment bug I hit and fixed
+After deploying, the app failed to connect to PostgreSQL with `dial tcp ... connect: cannot assign requested address`. The cause: Supabase's **direct connection** endpoint defaults to IPv6, which the hosting platform's network couldn't route to. The fix was switching to Supabase's **connection pooler** endpoint, which supports IPv4 — a good reminder that cloud networking issues are often about *which* endpoint you connect to, not whether your code is correct.
+
+*Note: the live deployment uses a free-tier hosting plan intended for demos, so it is not kept permanently running. The steps above are fully reproducible — clone the repo, provision your own free Supabase/Upstash instances, and deploy.*
